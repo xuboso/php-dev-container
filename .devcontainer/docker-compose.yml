@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    tty: true
+    volumes:
+      - ../:/workspace
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - php_app
+
+  #Redis
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - "6379:6379"
+    networks:
+      - php_app
+
+  #MySQL
+  db:
+    image: mysql:8.2.0
+    tty: true
+    ports: 
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: php_dev
+      MYSQL_PASSWORD: 123456
+    networks:
+      - php_app
+      
+  #php
+  php-container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    tty: true
+    volumes:
+      - ../:/workspace/
+    networks:
+      - php_app
+  
+#networks
+networks:
+  php_app:
+    driver: bridge
+
+#volumes:
+volumes:
+  mysql_data:
+    driver: local
